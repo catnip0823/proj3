@@ -157,6 +157,7 @@ kmeans (point_t * const data, point_t * const mean, color_t * const coloring,
     int converge_int = 0 ;
     /* Loop through the following two stages until no point changes its color
        during an iteration. */
+    cluster_array *my_cluster = (cluster_array*)malloc(sizeof(cluster_array)*cn);
     do {
     //for (int i = 0; i < 100; i++){
         converge = true;
@@ -166,110 +167,262 @@ kmeans (point_t * const data, point_t * const mean, color_t * const coloring,
 #pragma omp parallel reduction(+:converge_int)
         {
             #pragma omp for
-            for (int i = 0; i < pn; ++i) {
-                color_t new_color = cn;
-                double min_dist = std::numeric_limits<double>::infinity();
-
-//                double x[4]={data[i].getX(), data[i].getX(),
-//                                  data[i].getX(), data[i].getX()};
-//                double y[4] = {data[i].getY() ,data[i].getY(),
-//                                    data[i].getY() ,data[i].getY() };
-//                __m256d mmx = _mm256_load_pd(x);
-//                __m256d mmy = _mm256_load_pd(y);
-//
-//                for (color_t c = 0; c < cn/4*4; c+=4) {
-//                    double cx[4]={mean[c].getX(), mean[c+1].getX(),
-//                                 mean[c+2].getX(), mean[c+3].getX()};
-//                    double cy[4]={mean[c].getY(), mean[c+1].getY(),
-//                                  mean[c+2].getY(), mean[c+3].getY()};
-//                    __m256d mmcx = _mm256_load_pd(cx);
-//                    __m256d mmcy = _mm256_load_pd(cy);
-//                    __m256d mmx_c = _mm256_sub_pd(mmx,mmcx);
-//                    __m256d mmy_c = _mm256_sub_pd(mmy,mmcy);
-//                    double dists[4];
-//                    _mm256_store_pd(dists,_mm256_sqrt_pd(_mm256_mul_pd(mmx_c,mmx_c)+
-//                                                         _mm256_mul_pd(mmy_c,mmy_c)));
-//
-//                    for (int j = 0; j<4;j++){
-//                        if (dists[j] < min_dist) {
-//                            min_dist = dists[j];
-//                            new_color = c+j;
-//                        }
-//
-//                    }
-//                }
-//                for (color_t c = cn/4*4; c < cn; c+=1) {
-//                    double dist = sqrt(pow(data[i].getX()-mean[c].getX(),2)+pow(data[i].getY()-mean[c].getY(),2));
-//                    if (dist<min_dist){
-//                        min_dist=dist;
-//                        new_color=c;
-//                    }
-//                }
+            for (int i = 0; i < pn/4*4; i+=4) {
+                color_t new_color1 = cn;
+                color_t new_color2 = cn;
+                color_t new_color3 = cn;
+                color_t new_color4 = cn;
+                double min_dist1 = std::numeric_limits<double>::infinity();
+                double min_dist2 = std::numeric_limits<double>::infinity();
+                double min_dist3 = std::numeric_limits<double>::infinity();
+                double min_dist4 = std::numeric_limits<double>::infinity();
 
 
                 for(color_t c=0;c<cn/4*4;c+=4){
-                    double dist1 = sqrt(pow(data[i].getX()-mean[c].getX(),2)+pow(data[i].getY()-mean[c].getY(),2));
-                    double dist2 = sqrt(pow(data[i].getX()-mean[c+1].getX(),2)+pow(data[i].getY()-mean[c+1].getY(),2));
-                    double dist3 = sqrt(pow(data[i].getX()-mean[c+2].getX(),2)+pow(data[i].getY()-mean[c+2].getY(),2));
-                    double dist4 = sqrt(pow(data[i].getX()-mean[c+3].getX(),2)+pow(data[i].getY()-mean[c+3].getY(),2));
-                    if (dist1<min_dist){
-                        min_dist=dist1;
-                        new_color=c;
+                    double dist11 = (pow(data[i].getX()-mean[c].getX(),2)+pow(data[i].getY()-mean[c].getY(),2));
+                    double dist12 = (pow(data[i].getX()-mean[c+1].getX(),2)+pow(data[i].getY()-mean[c+1].getY(),2));
+                    double dist13 = (pow(data[i].getX()-mean[c+2].getX(),2)+pow(data[i].getY()-mean[c+2].getY(),2));
+                    double dist14 = (pow(data[i].getX()-mean[c+3].getX(),2)+pow(data[i].getY()-mean[c+3].getY(),2));
+                    if (dist11<min_dist1){
+                        min_dist1=dist11;
+                        new_color1=c;
                     }
-                    if (dist2<min_dist){
-                        min_dist=dist2;
-                        new_color=c+1;
+                    if (dist12<min_dist1){
+                        min_dist1=dist12;
+                        new_color1=c+1;
                     }
-                    if (dist3<min_dist){
-                        min_dist=dist3;
-                        new_color=c+2;
+                    if (dist13<min_dist1){
+                        min_dist1=dist13;
+                        new_color1=c+2;
                     }
-                    if (dist4<min_dist){
-                        min_dist=dist4;
-                        new_color=c+3;
+                    if (dist14<min_dist1){
+                        min_dist1=dist14;
+                        new_color1=c+3;
                     }
+
+                    double dist21 = (pow(data[i+1].getX()-mean[c].getX(),2)+pow(data[i+1].getY()-mean[c].getY(),2));
+                    double dist22 = (pow(data[i+1].getX()-mean[c+1].getX(),2)+pow(data[i+1].getY()-mean[c+1].getY(),2));
+                    double dist23 = (pow(data[i+1].getX()-mean[c+2].getX(),2)+pow(data[i+1].getY()-mean[c+2].getY(),2));
+                    double dist24 = (pow(data[i+1].getX()-mean[c+3].getX(),2)+pow(data[i+1].getY()-mean[c+3].getY(),2));
+                    if (dist21<min_dist2){
+                        min_dist2=dist21;
+                        new_color2=c;
+                    }
+                    if (dist22<min_dist2){
+                        min_dist2=dist22;
+                        new_color2=c+1;
+                    }
+                    if (dist23<min_dist2){
+                        min_dist2=dist23;
+                        new_color2=c+2;
+                    }
+                    if (dist24<min_dist2){
+                        min_dist2=dist24;
+                        new_color2=c+3;
+                    }
+
+                    double dist31 = (pow(data[i+2].getX()-mean[c].getX(),2)+pow(data[i+2].getY()-mean[c].getY(),2));
+                    double dist32 = (pow(data[i+2].getX()-mean[c+1].getX(),2)+pow(data[i+2].getY()-mean[c+1].getY(),2));
+                    double dist33 = (pow(data[i+2].getX()-mean[c+2].getX(),2)+pow(data[i+2].getY()-mean[c+2].getY(),2));
+                    double dist34 = (pow(data[i+2].getX()-mean[c+3].getX(),2)+pow(data[i+2].getY()-mean[c+3].getY(),2));
+                    if (dist31<min_dist3){
+                        min_dist3=dist31;
+                        new_color3=c;
+                    }
+                    if (dist32<min_dist3){
+                        min_dist3=dist32;
+                        new_color3=c+1;
+                    }
+                    if (dist33<min_dist3){
+                        min_dist3=dist33;
+                        new_color3=c+2;
+                    }
+                    if (dist34<min_dist3){
+                        min_dist3=dist34;
+                        new_color3=c+3;
+                    }
+
+                    double dist41 = (pow(data[i+3].getX()-mean[c].getX(),2)+pow(data[i+3].getY()-mean[c].getY(),2));
+                    double dist42 = (pow(data[i+3].getX()-mean[c+1].getX(),2)+pow(data[i+3].getY()-mean[c+1].getY(),2));
+                    double dist43 = (pow(data[i+3].getX()-mean[c+2].getX(),2)+pow(data[i+3].getY()-mean[c+2].getY(),2));
+                    double dist44 = (pow(data[i+3].getX()-mean[c+3].getX(),2)+pow(data[i+3].getY()-mean[c+3].getY(),2));
+                    if (dist41<min_dist4){
+                        min_dist4=dist41;
+                        new_color4=c;
+                    }
+                    if (dist42<min_dist4){
+                        min_dist4=dist42;
+                        new_color4=c+1;
+                    }
+                    if (dist43<min_dist4){
+                        min_dist4=dist43;
+                        new_color4=c+2;
+                    }
+                    if (dist44<min_dist4){
+                        min_dist4=dist44;
+                        new_color4=c+3;
+                    }
+
                 }
+
+
                 for(color_t c=cn/4*4;c<cn;c++){
-                    double dist1 = sqrt(pow(data[i].getX()-mean[c].getX(),2)+pow(data[i].getY()-mean[c].getY(),2));
-                    if (dist1<min_dist){
-                        min_dist=dist1;
-                        new_color=c;
+                    double dist1 = (pow(data[i].getX()-mean[c].getX(),2)+pow(data[i].getY()-mean[c].getY(),2));
+                    double dist2 = (pow(data[i+1].getX()-mean[c].getX(),2)+pow(data[i+1].getY()-mean[c].getY(),2));
+                    double dist3 = (pow(data[i+2].getX()-mean[c].getX(),2)+pow(data[i+2].getY()-mean[c].getY(),2));
+                    double dist4 = (pow(data[i+3].getX()-mean[c].getX(),2)+pow(data[i+3].getY()-mean[c].getY(),2));
+                    if (dist1<min_dist1){
+                        min_dist1=dist1;
+                        new_color1=c;
+                    }
+                    if (dist2<min_dist2){
+                        min_dist2=dist2;
+                        new_color2=c;
+                    }
+                    if (dist3<min_dist3){
+                        min_dist3=dist3;
+                        new_color3=c;
+                    }
+                    if (dist4<min_dist4){
+                        min_dist4=dist4;
+                        new_color4=c;
                     }
                 }
 
-                if (coloring[i] != new_color) {
-                    coloring[i] = new_color;
+                if (coloring[i] != new_color1) {
+                    coloring[i] = new_color1;
                     converge_int = 1;
                 }
+                if (coloring[i+1] != new_color2) {
+                    coloring[i+1] = new_color2;
+                    converge_int = 1;
+                }
+                if (coloring[i+2] != new_color3) {
+                    coloring[i+2] = new_color3;
+                    converge_int = 1;
+                }
+                if (coloring[i+3] != new_color4) {
+                    coloring[i+3] = new_color4;
+                    converge_int = 1;
+                }
+
             }
 
 
+
+
         }
+
+
+         for (int i = pn/4*4; i < pn; i+=1) {
+                color_t new_color1 = cn;
+                double min_dist1 = std::numeric_limits<double>::infinity();
+
+
+
+                for(color_t c=0;c<cn/4*4;c+=4){
+                    double dist11 = (pow(data[i].getX()-mean[c].getX(),2)+pow(data[i].getY()-mean[c].getY(),2));
+                    double dist12 = (pow(data[i].getX()-mean[c+1].getX(),2)+pow(data[i].getY()-mean[c+1].getY(),2));
+                    double dist13 = (pow(data[i].getX()-mean[c+2].getX(),2)+pow(data[i].getY()-mean[c+2].getY(),2));
+                    double dist14 = (pow(data[i].getX()-mean[c+3].getX(),2)+pow(data[i].getY()-mean[c+3].getY(),2));
+                    if (dist11<min_dist1){
+                        min_dist1=dist11;
+                        new_color1=c;
+                    }
+                    if (dist12<min_dist1){
+                        min_dist1=dist12;
+                        new_color1=c+1;
+                    }
+                    if (dist13<min_dist1){
+                        min_dist1=dist13;
+                        new_color1=c+2;
+                    }
+                    if (dist14<min_dist1){
+                        min_dist1=dist14;
+                        new_color1=c+3;
+                    }
+
+                    
+
+                }
+
+
+                for(color_t c=cn/4*4;c<cn;c++){
+                    double dist1 = (pow(data[i].getX()-mean[c].getX(),2)+pow(data[i].getY()-mean[c].getY(),2));
+
+                    if (dist1<min_dist1){
+                        min_dist1=dist1;
+                        new_color1=c;
+                    }
+                }
+
+                if (coloring[i] != new_color1) {
+                    coloring[i] = new_color1;
+                    converge_int += 1;
+                }
+
+            }
 
         if (converge_int) converge=false;
         /* Calculate the new mean for each cluster to be the current average
            of point positions in the cluster. */
 
 
-        cluster_array *my_cluster = (cluster_array*)malloc(sizeof(cluster_array)*cn);
-        for (color_t c = 0; c < cn; ++c) {
+        
+        for (color_t c = 0; c < cn/5*5; c+=5) {
+            my_cluster[c].sum_x = 0;
+            my_cluster[c].sum_y = 0;
+            my_cluster[c].count = 0;
+            my_cluster[c+1].sum_x = 0;
+            my_cluster[c+1].sum_y = 0;
+            my_cluster[c+1].count = 0;
+            my_cluster[c+2].sum_x = 0;
+            my_cluster[c+2].sum_y = 0;
+            my_cluster[c+2].count = 0;
+            my_cluster[c+3].sum_x = 0;
+            my_cluster[c+3].sum_y = 0;
+            my_cluster[c+3].count = 0;
+            my_cluster[c+4].sum_x = 0;
+            my_cluster[c+4].sum_y = 0;
+            my_cluster[c+4].count = 0;
+        }
+        for (color_t c = cn/5*5; c < cn;c++) {
             my_cluster[c].sum_x = 0;
             my_cluster[c].sum_y = 0;
             my_cluster[c].count = 0;
         }
 
-        for (int i = 0; i < pn; ++i){
+        for (int i = 0; i < pn / 5 * 5; i += 5) {
+            my_cluster[coloring[i]].sum_x += data[i].getX();
+            my_cluster[coloring[i]].sum_y += data[i].getY();
+            my_cluster[coloring[i]].count++;
+            my_cluster[coloring[i + 1]].sum_x += data[i + 1].getX();
+            my_cluster[coloring[i + 1]].sum_y += data[i + 1].getY();
+            my_cluster[coloring[i + 1]].count++;
+            my_cluster[coloring[i + 2]].sum_x += data[i + 2].getX();
+            my_cluster[coloring[i + 2]].sum_y += data[i + 2].getY();
+            my_cluster[coloring[i + 2]].count++;
+            my_cluster[coloring[i + 3]].sum_x += data[i + 3].getX();
+            my_cluster[coloring[i + 3]].sum_y += data[i + 3].getY();
+            my_cluster[coloring[i + 3]].count++;
+            my_cluster[coloring[i + 4]].sum_x += data[i + 4].getX();
+            my_cluster[coloring[i + 4]].sum_y += data[i + 4].getY();
+            my_cluster[coloring[i + 4]].count++;
+        }
+
+        for (int i = pn/5*5; i < pn; i+=1) {
             my_cluster[coloring[i]].sum_x += data[i].getX();
             my_cluster[coloring[i]].sum_y += data[i].getY();
             my_cluster[coloring[i]].count++;
         }
-        for (color_t c = 0; c < cn; ++c) {
+        for (color_t c = 0; c < cn; c++) {
             mean[c].setXY(my_cluster[c].sum_x/my_cluster[c].count, my_cluster[c].sum_y/my_cluster[c].count);
         }
-        free(my_cluster);
+        
 
 
     } while (!converge);
+    free(my_cluster);
 }
 
 /*********************************************************
