@@ -207,10 +207,32 @@ kmeans (point_t * const data, point_t * const mean, color_t * const coloring,
 //                }
 
 
-                for(color_t c=0;c<cn;c++){
-                    double dist = sqrt(pow(data[i].getX()-mean[c].getX(),2)+pow(data[i].getY()-mean[c].getY(),2));
-                    if (dist<min_dist){
-                        min_dist=dist;
+                for(color_t c=0;c<cn/4*4;c+=4){
+                    double dist1 = sqrt(pow(data[i].getX()-mean[c].getX(),2)+pow(data[i].getY()-mean[c].getY(),2));
+                    double dist2 = sqrt(pow(data[i].getX()-mean[c+1].getX(),2)+pow(data[i].getY()-mean[c+1].getY(),2));
+                    double dist3 = sqrt(pow(data[i].getX()-mean[c+2].getX(),2)+pow(data[i].getY()-mean[c+2].getY(),2));
+                    double dist4 = sqrt(pow(data[i].getX()-mean[c+3].getX(),2)+pow(data[i].getY()-mean[c+3].getY(),2));
+                    if (dist1<min_dist){
+                        min_dist=dist1;
+                        new_color=c;
+                    }
+                    if (dist2<min_dist){
+                        min_dist=dist2;
+                        new_color=c+1;
+                    }
+                    if (dist3<min_dist){
+                        min_dist=dist3;
+                        new_color=c+2;
+                    }
+                    if (dist4<min_dist){
+                        min_dist=dist4;
+                        new_color=c+3;
+                    }
+                }
+                for(color_t c=cn/4*4;c<cn;c++){
+                    double dist1 = sqrt(pow(data[i].getX()-mean[c].getX(),2)+pow(data[i].getY()-mean[c].getY(),2));
+                    if (dist1<min_dist){
+                        min_dist=dist1;
                         new_color=c;
                     }
                 }
